@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Freemium Gate A/B Test · Belén Shell-Merier</title>
+  <meta name="description" content="An end-to-end A/B test of moving a freemium gate: design, data checks, inference, a hidden assignment imbalance and a business recommendation.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="index.html">Belén Shell-Merier</a>
+    <nav class="nav">
+      <a href="index.html#work">Case studies</a>
+      <a href="index.html#about">About</a>
+      <a class="hide-sm" href="https://www.linkedin.com/in/maria-belen-shell-merier-4923a2231/">LinkedIn</a>
+      <a href="https://github.com/belen-shell-merier/ab-test-freemium-gate">Code</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="case-hero">
+    <div class="wrap">
+      <a class="back" href="index.html">← All case studies</a>
+      <div class="tag">Experimentation · Freemium monetization</div>
+      <h1>Should we move the freemium gate?</h1>
+      <p class="lead">A mobile game tested moving its first "gate", the point where players must wait or pay to continue, from level 30 to level 40. It is the same decision a freemium app or SaaS product faces when it chooses where to put a paywall.</p>
+      <div class="case-meta">
+        <span><strong>Data:</strong> 90,189 players, randomly assigned</span>
+        <span><strong>Tools:</strong> Python, SQL (DuckDB), Google Colab</span>
+        <span><strong>Methods:</strong> power analysis, SRM check, z-test, bootstrap, sensitivity</span>
+      </div>
+
+      <div class="answer-box" style="margin-top:32px">
+        <div class="label">Answer</div>
+        <h2>No. Keep the gate at level 30.</h2>
+        <ul>
+          <li>With the gate at level 40, fewer players come back a week later: about 3–4% fewer.</li>
+          <li>For every 100,000 new players, that is roughly 600 to 800 fewer still playing after a week, and fewer potential buyers.</li>
+          <li>The result holds after checking it in several ways, including a possible problem in how players were split into groups.</li>
+        </ul>
+      </div>
+
+      <div class="stats">
+        <div class="stat"><div class="value">19.0%</div><div class="desc">7-day retention, gate at level 30</div></div>
+        <div class="stat"><div class="value">18.2%</div><div class="desc">7-day retention, gate at level 40</div></div>
+        <div class="stat"><div class="value">−0.6 to −0.8 pp</div><div class="desc">Likely true effect, after adjusting for the imbalance</div></div>
+        <div class="stat"><div class="value">p = 0.002</div><div class="desc">Confirmed by a bootstrap with 2,000 resamples</div></div>
+      </div>
+
+      <figure class="chart-figure">
+        <img src="summary_chart.png" alt="Bar chart: 7-day retention is 19.0% with the gate at level 30 and 18.2% with the gate at level 40, with 95% confidence intervals that do not overlap.">
+        <figcaption>7-day retention by group, with 95% confidence intervals.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap prose">
+      <div class="step">1 · Design</div>
+      <h2>Setting up the test</h2>
+      <ul>
+        <li><strong>Hypothesis:</strong> 7-day retention is the same with the gate at level 30 or 40, tested two-sided because the change could help or hurt.</li>
+        <li><strong>Primary metric: 7-day retention.</strong> It measures whether players stay, which is what drives revenue in a freemium game. Most players have not reached level 30 by day one, so 1-day retention is only a secondary metric. Game rounds played act as a guardrail.</li>
+        <li><strong>Minimum detectable effect: 1 percentage point.</strong> On a 19% baseline, losing 1 pp means about 5% fewer retained players, a loss worth acting on.</li>
+        <li><strong>Sample size:</strong> 23,664 players per group were needed; the smaller group had 44,699, enough to detect effects down to 0.73 pp.</li>
+      </ul>
+      <p class="note">This is a retrospective analysis of a public dataset; the design is written as it would have been set up before launch.</p>
+    </div>
+  </section>
+
+  <hr class="divider wrap">
+
+  <section>
+    <div class="wrap prose">
+      <div class="step">2 · Data checks</div>
+      <h2>Can we trust the data?</h2>
+      <ul>
+        <li><strong>Complete and unique:</strong> no missing values, no duplicated players.</li>
+        <li><strong>One impossible player:</strong> 49,854 rounds in 14 days, about 150 per hour without stopping; the next highest was 2,961. I removed it as a bot or logging error and kept players with zero rounds, who are real users who installed and left.</li>
+        <li><strong>Group sizes:</strong> the split came out 50.4% / 49.6% (chi-square p = 0.009). It passes the usual industry threshold for a sample ratio mismatch (p &lt; 0.001), but it is borderline, so I kept it in view.</li>
+      </ul>
+    </div>
+  </section>
+
+  <hr class="divider wrap">
+
+  <section>
+    <div class="wrap prose">
+      <div class="step">3 · Results</div>
+      <h2>What happened to retention</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Metric</th><th class="num">Gate 30</th><th class="num">Gate 40</th><th class="num">Difference</th><th class="num">95% CI</th><th class="num">p-value</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>7-day retention</strong> (primary)</td><td class="num">19.02%</td><td class="num">18.20%</td><td class="num"><strong>−0.82 pp</strong></td><td class="num">−1.33 to −0.31</td><td class="num"><strong>0.002</strong></td></tr>
+            <tr><td>1-day retention</td><td class="num">44.82%</td><td class="num">44.23%</td><td class="num">−0.59 pp</td><td class="num">−1.24 to +0.06</td><td class="num">0.074</td></tr>
+            <tr><td>Rounds played (guardrail)</td><td class="num">median 17</td><td class="num">median 16</td><td class="num">no change</td><td class="num">–</td><td class="num">0.051</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>A bootstrap with 2,000 resamples gives almost the same interval (−1.31 to −0.33 pp), and gate 30 wins in 99.9% of resamples, so the result does not depend on the normal approximation. The same metrics computed in SQL match the Python results exactly:</p>
+<pre><code>SELECT version,
+       COUNT(*)                                      AS players,
+       ROUND(100 * AVG(CAST(retention_7 AS INT)), 2) AS retention_7_pct
+FROM players
+GROUP BY version;</code></pre>
+    </div>
+  </section>
+
+  <hr class="divider wrap">
+
+  <section>
+    <div class="wrap prose">
+      <div class="step">4 · Digging deeper</div>
+      <h2>The imbalance most analyses miss</h2>
+      <p>I split players by engagement to see where the effect comes from. The split showed something more important: <strong>the extra players in the gate 40 group are almost all low-engagement players</strong>, who rarely come back (about 4% retention).</p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Segment</th><th class="num">Gate 30</th><th class="num">Gate 40</th><th class="num">Difference</th><th class="num">Players (30 / 40)</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>30+ rounds</td><td class="num">43.87%</td><td class="num">43.00%</td><td class="num">−0.87 pp</td><td class="num">16,655 / 16,613</td></tr>
+            <tr><td>Under 30 rounds</td><td class="num">4.26%</td><td class="num">3.93%</td><td class="num">−0.33 pp</td><td class="num">28,044 / <strong>28,876</strong></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>If those extra players came from an error in the assignment, they would pull gate 40's retention down on their own. So I tested it: <strong>removing the 790 extra players shrinks the drop from −0.82 to −0.57 pp, and it is still significant (p = 0.030)</strong>. The effect is smaller than it first looked, but the direction and the recommendation hold.</p>
+      <div class="callout"><p>Rounds are counted over each player's first 14 days, after assignment, so this split is descriptive, not causal. In a real setting, the next step would be to audit the assignment logs.</p></div>
+    </div>
+  </section>
+
+  <hr class="divider wrap">
+
+  <section>
+    <div class="wrap prose">
+      <div class="step">5 · Decision</div>
+      <h2>Recommendation</h2>
+      <ul>
+        <li><strong>Keep the gate at level 30.</strong> Moving it costs 3–4% of week-1 players, and engagement does not compensate.</li>
+        <li><strong>Risks:</strong> the borderline imbalance, a short window (each player's first 14 days) and no spending data, so the revenue impact is estimated through retention rather than measured.</li>
+        <li><strong>Next test:</strong> audit the assignment, then try an earlier or softer gate (a waiting time instead of a hard block) and track revenue per player alongside retention.</li>
+        <li><strong>A possible why:</strong> an earlier break may keep the game from getting boring, a form of hedonic adaptation from behavioral economics. It is a hypothesis, not something this test proves.</li>
+      </ul>
+    </div>
+  </section>
+
+  <hr class="divider wrap">
+
+  <section>
+    <div class="wrap prose">
+      <div class="step">How I worked</div>
+      <h2>How I used AI</h2>
+      <p>I used Claude Code to automate the execution: it wrote and ran the code and drafted the write-up, while I designed the analysis, made the calls and reviewed every result.</p>
+      <ul>
+        <li><strong>My decisions:</strong> the primary metric, the minimum detectable effect, the outlier rule, how to treat the borderline imbalance and the final recommendation.</li>
+        <li><strong>How I checked the work:</strong> I re-ran the notebook from scratch, reproduced the key numbers with two independent methods (SQL vs. Python, z-test vs. bootstrap) and checked every variable definition against the dataset documentation.</li>
+        <li><strong>What that caught:</strong> the rounds column covers a player's first 14 days, not one week, which changed the outlier reasoning and the caveat on the segment analysis.</li>
+      </ul>
+      <div class="actions" style="margin-top:28px">
+        <a class="btn primary" href="https://github.com/belen-shell-merier/ab-test-freemium-gate/blob/main/ab_test_cookie_cats.ipynb">See the full notebook</a>
+        <a class="btn" href="https://github.com/belen-shell-merier/ab-test-freemium-gate">Repository</a>
+        <a class="btn" href="index.html">← All case studies</a>
+      </div>
+      <p class="note" style="margin-top:28px">Data: Mobile Games A/B Testing – Cookie Cats (Kaggle), 90,189 players.</p>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <span>© 2026 Belén Shell-Merier</span>
+    <span><a href="https://www.linkedin.com/in/maria-belen-shell-merier-4923a2231/">LinkedIn</a> · <a href="https://github.com/belen-shell-merier">GitHub</a></span>
+  </div>
+</footer>
+
+</body>
+</html>
