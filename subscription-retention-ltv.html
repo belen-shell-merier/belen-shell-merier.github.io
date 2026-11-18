@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Subscription Retention &amp; LTV · Belén Shell-Merier</title>
+  <meta name="description" content="Which subscribers should receive which retention offer, and what it is worth: segmentation, logistic regression, discounted LTV, an expected-value decision model and a pilot power analysis.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="index.html">Belén Shell-Merier</a>
+    <nav class="nav">
+      <a href="index.html#work">Case studies</a>
+      <a href="index.html#about">About</a>
+      <a class="hide-sm" href="https://www.linkedin.com/in/maria-belen-shell-merier-4923a2231/">LinkedIn</a>
+      <a href="https://github.com/belen-shell-merier/subscription-retention-ltv">Code</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="case-hero">
+    <div class="wrap">
+      <a class="back" href="index.html">← All case studies</a>
+      <div class="tag">Retention · Customer lifetime value</div>
+      <h1>Which subscribers should we try to keep, and with what offer?</h1>
+      <p class="lead">A subscription business loses about a quarter of its customers every year, and a common response is a discount for every customer at risk. I estimated which customers to target, which offer to make and how much each option is worth.</p>
+      <div class="case-meta">
+        <span><strong>Data:</strong> 7,043 customers of a telecom operator (IBM sample)</span>
+        <span><strong>Tools:</strong> Python, SQL (DuckDB), Tableau, Google Colab</span>
+        <span><strong>Methods:</strong> segmentation, logistic regression, discounted LTV, expected value, sensitivity, power analysis</span>
+      </div>
+
+      <div class="answer-box" style="margin-top:32px">
+        <div class="label">Answer</div>
+        <h2>Make a targeted offer instead of a general discount.</h2>
+        <ul>
+          <li>Offer month-to-month customers an annual contract with one free month, and make no offer to customers who already have a contract.</li>
+          <li>Two of six segments (29% of customers) account for 68% of the revenue lost to churn. Customers on contracts seldom cancel.</li>
+          <li>The plan pays off only if churn falls by about 23% among customers who accept, so it starts as a 12-month randomized pilot.</li>
+        </ul>
+      </div>
+
+      <div class="stats">
+        <div class="stat"><div class="value">68%</div><div class="desc">of lost monthly revenue comes from 2 segments (29% of customers)</div></div>
+        <div class="stat"><div class="value">+USD 48k</div><div class="desc">expected lifetime value of the targeted plan</div></div>
+        <div class="stat"><div class="value">−USD 239k</div><div class="desc">lost with a 15% discount for every month-to-month customer</div></div>
+        <div class="stat"><div class="value">~23%</div><div class="desc">churn reduction the offer needs to pay off (22–29% by segment)</div></div>
+      </div>
+
+      <figure class="chart-figure">
+        <img style="max-width:100%" src="retention_lost_revenue.png" alt="Horizontal bar chart: share of lost monthly revenue by segment. Segment 1 (month-to-month, new, high bill) 34.5% and segment 3 (month-to-month, tenured, high bill) 33.6%; segments 1 to 4 get offer B, contract segments 5 and 6 get no offer.">
+        <figcaption>Share of lost monthly revenue by segment, colored by the recommended decision.</figcaption>
+      </figure>
+
+      <div class="actions" style="margin-top:22px">
+        <a class="btn primary" href="https://public.tableau.com/app/profile/belen.shell.merier/viz/SubscriptionRetentionLTV/Executivesummary">Open the interactive dashboard</a>
+        <a class="btn" href="https://github.com/belen-shell-merier/subscription-retention-ltv/blob/main/MEMO.md">Read the one-page memo</a>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap prose">
+      <div class="step">1 · Who leaves</div>
+      <h2>Who cancels</h2>
+      <ul>
+        <li><strong>Month-to-month customers churn 42.7% a year</strong>, versus 2.8% on two-year contracts. Customers in their first year (47.4%), electronic-check payers (45.3%) and fiber customers (41.9%) are also at high risk.</li>
+        <li><strong>Same question in SQL:</strong> month-to-month customers paying by electronic check are 1,850 customers with 53.7% churn and 30.4% of revenue.</li>
+        <li><strong>Logistic regression:</strong> a two-year contract is associated with 74% lower odds of churn (odds ratio 0.26), and each extra year of tenure with 32% lower odds. Customers choose their contracts, so these are associations, not causal effects.</li>
+      </ul>
+      <figure class="chart-figure">
+        <img style="max-width:100%" src="retention_churn_by_variable.png" alt="Four bar charts of churn rate: by contract (month-to-month 42.7%), tenure (0-12 months 47.4%), payment method (electronic check 45.3%) and internet service (fiber optic 41.9%), against an overall churn of 26.5%.">
+        <figcaption>Churn rate by variable; the dashed line is the overall churn (26.5%).</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <hr class="divider wrap">
+
+  <section>
+    <div class="wrap prose">
+      <div class="step">2 · Segments and value</div>
+      <h2>Segments and lifetime value</h2>
+      <p>I split month-to-month customers by tenure (new = 12 months or less) and value (bill above the median), and contract customers by value only. Customers within a segment have similar risk and value, and each segment can receive a different decision. For each one I estimated a discounted lifetime value (60% margin, 10% annual discount rate, 5-year horizon).</p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Segment</th><th class="num">Customers</th><th class="num">Annual churn</th><th class="num">LTV (USD)</th><th>Decision</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>1 · Month-to-month, new, high bill</td><td class="num">812</td><td class="num">70.0%</td><td class="num">490</td><td>Offer B</td></tr>
+            <tr><td>2 · Month-to-month, new, low bill</td><td class="num">1,182</td><td class="num">38.6%</td><td class="num">487</td><td>Offer B</td></tr>
+            <tr><td>3 · Month-to-month, tenured, high bill</td><td class="num">1,231</td><td class="num">41.5%</td><td class="num">1,017</td><td>Offer B</td></tr>
+            <tr><td>4 · Month-to-month, tenured, low bill</td><td class="num">650</td><td class="num">18.5%</td><td class="num">858</td><td>Offer B</td></tr>
+            <tr><td>5 · Contract, high bill</td><td class="num">1,472</td><td class="num">10.7%</td><td class="num">2,125</td><td>No offer</td></tr>
+            <tr><td>6 · Contract, low bill</td><td class="num">1,696</td><td class="num">3.3%</td><td class="num">944</td><td>No offer</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider wrap">
+
+  <section>
+    <div class="wrap prose">
+      <div class="step">3 · Decision</div>
+      <h2>Comparing the offers</h2>
+      <p>I compared three offers with explicit assumptions and computed the expected value of each one in each segment, compared with doing nothing: take-up × (customers saved × LTV − cost). The cost is paid for every customer who accepts, including those who would have stayed, and that is where a general discount loses money.</p>
+      <ul>
+        <li><strong>A · 15% discount for 12 months:</strong> everyone takes it, churn falls 20%. Given to every month-to-month customer: <strong>−USD 239k</strong>.</li>
+        <li><strong>B · annual contract + 1 free month</strong> (month-to-month only): 25% take-up, churn falls 40% among acceptors. Given to segments 1–4: <strong>+USD 48k</strong>.</li>
+        <li><strong>C · free support and security for 12 months</strong> (USD 36): 60% take-up, churn falls 15%.</li>
+      </ul>
+      <div class="callout"><p><strong>Sensitivity:</strong> offer B still wins if it works at 75% of the assumed strength (+USD 19.9k). At 50% or less, no offer pays. Take-up changes the size of the result, not its sign.</p></div>
+      <figure class="chart-figure">
+        <img style="max-width:100%" src="retention_mrr_forecast.png" alt="Line chart of monthly recurring revenue over 12 months: it falls from USD 456k to 321k with no action and to 333k with offer B.">
+        <figcaption>12-month MRR forecast of the existing base (no new customers). After the cost of the free month, the net gain in year one is about USD 34k.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <hr class="divider wrap">
+
+  <section>
+    <div class="wrap prose">
+      <div class="step">4 · Measurement</div>
+      <h2>Pilot design</h2>
+      <p>The offer pays off if churn falls by about 23% among the customers who accept. A randomized test, however, compares everyone <em>offered</em> the deal with a control group, and only about 25% are expected to accept. <strong>The difference the test can observe is therefore 5.7%</strong> (42.7% vs 40.3% churn).</p>
+      <ul>
+        <li><strong>Detecting that difference needs 12,722 customers</strong> (two-sided, α = 0.05, power = 0.80). There are 3,875 eligible, and adding new sign-ups would take about 53 months.</li>
+        <li><strong>With all eligible customers, the test can detect a reduction of about 41%,</strong> close to the assumed 40%. It can confirm the assumption but not the break-even.</li>
+        <li><strong>Higher take-up reduces the sample needed:</strong> at 50%, about 1,600 customers per group would be enough.</li>
+        <li><strong>Duration:</strong> churn is measured over a year, so the result is read at 12 months, with contract conversions and monthly churn tracked every month as early signals.</li>
+      </ul>
+      <div class="callout"><p><strong>Recommendation:</strong> run the pilot with all eligible customers, randomized 50/50, and test channels and messages to raise take-up at the same time. A non-significant result means the effect is below about 40%, not that the offer fails.</p></div>
+    </div>
+  </section>
+
+  <hr class="divider wrap">
+
+  <section>
+    <div class="wrap prose">
+      <div class="step">5 · Limits</div>
+      <h2>Limitations</h2>
+      <ul>
+        <li><strong>Churn period:</strong> the data says churners left "within the last month", but read literally that implies a 3.8-month average life against a 32.4-month average tenure. I treat churn as annual and flag it as the main limitation.</li>
+        <li><strong>Assumptions, not measurements:</strong> take-up, offer effectiveness, margin, discount rate and a hypothetical CAC of USD 300.</li>
+        <li><strong>Snapshot data:</strong> one point in time with no dates, so tenure groups are not real sign-up cohorts.</li>
+        <li><strong>Sample company:</strong> IBM sample data, so the numbers illustrate the method rather than a real business.</li>
+      </ul>
+    </div>
+  </section>
+
+  <hr class="divider wrap">
+
+  <section>
+    <div class="wrap prose">
+      <div class="step">How I worked</div>
+      <h2>How I used AI</h2>
+      <p>I directed the analysis; Claude Code handled the execution. I defined the question and scope, made every analytical decision (data cleaning, segmentation, LTV and offer assumptions, test parameters and the final recommendation) and set the checks the results had to pass. Claude Code wrote and ran the code, built the Tableau dashboard and drafted the text, which I reviewed and edited.</p>
+      <ul>
+        <li><strong>Checks:</strong> key numbers recomputed independently from the raw data, and the notebook re-run from scratch.</li>
+        <li><strong>What they caught:</strong> an uncited churn definition, an offer applied to ineligible customers, rounding before later calculations and fragile code, all fixed. The power analysis later showed the pilot could not detect the break-even, which changed the measurement plan.</li>
+      </ul>
+      <div class="actions" style="margin-top:28px">
+        <a class="btn primary" href="https://github.com/belen-shell-merier/subscription-retention-ltv/blob/main/subscription_retention_ltv.ipynb">See the full notebook</a>
+        <a class="btn" href="https://github.com/belen-shell-merier/subscription-retention-ltv">Repository</a>
+        <a class="btn" href="index.html">← All case studies</a>
+      </div>
+      <p class="note" style="margin-top:28px">Data: Telco Customer Churn (IBM sample data, via Kaggle), 7,043 customers.</p>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <span>© 2026 Belén Shell-Merier</span>
+    <span><a href="https://www.linkedin.com/in/maria-belen-shell-merier-4923a2231/">LinkedIn</a> · <a href="https://github.com/belen-shell-merier">GitHub</a></span>
+  </div>
+</footer>
+
+</body>
+</html>

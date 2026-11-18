@@ -160,11 +160,10 @@ GROUP BY version;</code></pre>
     <div class="wrap prose">
       <div class="step">How I worked</div>
       <h2>How I used AI</h2>
-      <p>I used Claude Code to automate the execution: it wrote and ran the code and drafted the write-up, while I designed the analysis, made the calls and reviewed every result.</p>
+      <p>I directed the analysis; Claude Code handled the execution. I designed the test and made every analytical decision (the primary metric, the minimum detectable effect, the outlier rule, how to treat the borderline imbalance and the final recommendation) and set the checks the results had to pass. Claude Code wrote and ran the code and drafted the text, which I reviewed and edited.</p>
       <ul>
-        <li><strong>My decisions:</strong> the primary metric, the minimum detectable effect, the outlier rule, how to treat the borderline imbalance and the final recommendation.</li>
-        <li><strong>How I checked the work:</strong> I re-ran the notebook from scratch, reproduced the key numbers with two independent methods (SQL vs. Python, z-test vs. bootstrap) and checked every variable definition against the dataset documentation.</li>
-        <li><strong>What that caught:</strong> the rounds column covers a player's first 14 days, not one week, which changed the outlier reasoning and the caveat on the segment analysis.</li>
+        <li><strong>Checks:</strong> the notebook re-run from scratch, the key numbers reproduced with two independent methods (SQL vs. Python, z-test vs. bootstrap) and every variable definition checked against the dataset documentation.</li>
+        <li><strong>What they caught:</strong> the rounds column covers a player's first 14 days, not one week, which changed the outlier reasoning and the caveat on the segment analysis.</li>
       </ul>
       <div class="actions" style="margin-top:28px">
         <a class="btn primary" href="https://github.com/belen-shell-merier/ab-test-freemium-gate/blob/main/ab_test_cookie_cats.ipynb">See the full notebook</a>
