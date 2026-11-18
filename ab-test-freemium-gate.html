@@ -41,16 +41,16 @@
         <div class="label">Answer</div>
         <h2>No. Keep the gate at level 30.</h2>
         <ul>
-          <li>With the gate at level 40, fewer players come back a week later: about 3–4% fewer.</li>
-          <li>For every 100,000 new players, that is roughly 600 to 800 fewer still playing after a week, and fewer potential buyers.</li>
-          <li>The result holds after checking it in several ways, including a possible problem in how players were split into groups.</li>
+          <li>With the gate at level 40, about 4% fewer players come back a week later (at least 3% under a conservative check).</li>
+          <li>For every 100,000 new players, that is roughly 800 fewer still playing after a week, and fewer potential buyers.</li>
+          <li>The direction of the result does not change under any of the checks, including one for a possible problem in how players were split into groups.</li>
         </ul>
       </div>
 
       <div class="stats">
         <div class="stat"><div class="value">19.0%</div><div class="desc">7-day retention, gate at level 30</div></div>
         <div class="stat"><div class="value">18.2%</div><div class="desc">7-day retention, gate at level 40</div></div>
-        <div class="stat"><div class="value">−0.6 to −0.8 pp</div><div class="desc">Likely true effect, after adjusting for the imbalance</div></div>
+        <div class="stat"><div class="value">−0.82 pp</div><div class="desc">Measured effect (95% CI −1.33 to −0.31); still −0.57 pp in a conservative check</div></div>
         <div class="stat"><div class="value">p = 0.002</div><div class="desc">Confirmed by a bootstrap with 2,000 resamples</div></div>
       </div>
 
@@ -121,8 +121,8 @@ GROUP BY version;</code></pre>
   <section>
     <div class="wrap prose">
       <div class="step">4 · Digging deeper</div>
-      <h2>The imbalance most analyses miss</h2>
-      <p>I split players by engagement to see where the effect comes from. The split showed something more important: <strong>the extra players in the gate 40 group are almost all low-engagement players</strong>, who rarely come back (about 4% retention).</p>
+      <h2>An imbalance in the assignment</h2>
+      <p>I split players by engagement to see where the effect comes from. The split also showed that <strong>the extra players in the gate 40 group are almost all low-engagement players</strong>, who rarely come back (about 4% retention).</p>
       <div class="table-wrap">
         <table>
           <thead>
@@ -134,8 +134,8 @@ GROUP BY version;</code></pre>
           </tbody>
         </table>
       </div>
-      <p>If those extra players came from an error in the assignment, they would pull gate 40's retention down on their own. So I tested it: <strong>removing the 790 extra players shrinks the drop from −0.82 to −0.57 pp, and it is still significant (p = 0.030)</strong>. The effect is smaller than it first looked, but the direction and the recommendation hold.</p>
-      <div class="callout"><p>Rounds are counted over each player's first 14 days, after assignment, so this split is descriptive, not causal. In a real setting, the next step would be to audit the assignment logs.</p></div>
+      <p>If those extra players came from an error in the assignment, they would pull gate 40's retention down on their own. So I tested it: <strong>removing the 790 extra players shrinks the drop from −0.82 to −0.57 pp, and it is still significant (p = 0.030)</strong>. The direction and the recommendation hold.</p>
+      <div class="callout"><p>This is a robustness check under an assumption, not a corrected estimate: it assumes the extra players are low-engagement players retained at that segment's rate, and rounds are counted over each player's first 14 days, after assignment. The headline estimate remains the measured −0.82 pp. In a real setting, the next step would be to audit the assignment logs.</p></div>
     </div>
   </section>
 
@@ -146,10 +146,10 @@ GROUP BY version;</code></pre>
       <div class="step">5 · Decision</div>
       <h2>Recommendation</h2>
       <ul>
-        <li><strong>Keep the gate at level 30.</strong> Moving it costs 3–4% of week-1 players, and engagement does not compensate.</li>
+        <li><strong>Keep the gate at level 30.</strong> Moving it costs about 4% of week-1 players (at least 3% under the conservative check), and players do not make up for it by playing more rounds.</li>
         <li><strong>Risks:</strong> the borderline imbalance, a short window (each player's first 14 days) and no spending data, so the revenue impact is estimated through retention rather than measured.</li>
         <li><strong>Next test:</strong> audit the assignment, then try an earlier or softer gate (a waiting time instead of a hard block) and track revenue per player alongside retention.</li>
-        <li><strong>A possible why:</strong> an earlier break may keep the game from getting boring, a form of hedonic adaptation from behavioral economics. It is a hypothesis, not something this test proves.</li>
+        <li><strong>Hypothesis:</strong> an earlier break may keep the game from getting boring, a form of hedonic adaptation from behavioral economics. This test does not prove it; a follow-up test with a softer gate would help.</li>
       </ul>
     </div>
   </section>
